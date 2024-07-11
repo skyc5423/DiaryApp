@@ -1,41 +1,20 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import WriteDiaryScreen from "./screens/WriteDiaryScreen";
+import HistoryScreen from "./screens/HistoryScreen";
+import SettingsScreen from "./screens/SettingsScreen";
+
+const Tab = createBottomTabNavigator();
 
 export default function App() {
-  const [greeting, setGreeting] = useState("Hello, World!");
-
-  const changeGreeting = () => {
-    setGreeting("Hello, React Native!");
-  };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>{greeting}</Text>
-      <TouchableOpacity style={styles.button} onPress={changeGreeting}>
-        <Text style={styles.buttonText}>Change Greeting</Text>
-      </TouchableOpacity>
-    </View>
+    <NavigationContainer>
+      <Tab.Navigator>
+        <Tab.Screen name="Write" component={WriteDiaryScreen} />
+        <Tab.Screen name="History" component={HistoryScreen} />
+        <Tab.Screen name="Settings" component={SettingsScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  text: {
-    fontSize: 24,
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: "#007AFF",
-    padding: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-});
