@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// screens/HistoryScreen.js
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -7,107 +8,112 @@ import {
   ScrollView,
   TextInput,
   Modal,
+  Alert,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
-import { Ionicons } from "@expo/vector-icons"; // Make sure to install @expo/vector-icons
+import { Ionicons } from "@expo/vector-icons";
+import {
+  initDatabase,
+  getEntries,
+  addEntry,
+  updateEntry,
+  deleteEntry,
+} from "../database";
 
 const COLORS = {
-  primary: "#7BB5B5", // Soft teal
-  secondary: "#F0F7F4", // Light mint cream
-  text: "#2C3E50", // Dark blue-gray
-  accent: "#93A9D1", // Soft periwinkle
-  danger: "#E74C3C", // Soft red for delete
-};
-
-// Mock data for diary entries
-const mockEntries = {
-  "2023-07-12": {
-    text: "Today was a great day! I felt happy and accomplished.",
-    image: "https://example.com/images/happy.jpg",
-  },
-  "2023-07-11": {
-    text: "I had a challenging day, but I learned a lot from it.",
-    image: "https://example.com/images/challenge.jpg",
-  },
-  "2023-07-10": {
-    text: "Spent time with family. Feeling grateful and loved.",
-    image: "https://example.com/images/family.jpg",
-  },
-  "2023-07-09": {
-    text: "Explored a new hobby. It's exciting to learn something new!",
-    image: "https://example.com/images/hobby.jpg",
-  },
-  "2023-07-08": {
-    text: "Reflected on my goals. Feeling motivated and focused.",
-    image: "https://example.com/images/goals.jpg",
-  },
+  primary: "#7BB5B5",
+  secondary: "#F0F7F4",
+  text: "#2C3E50",
+  accent: "#93A9D1",
+  danger: "#E74C3C",
 };
 
 export default function HistoryScreen() {
-  const [entries, setEntries] = useState(mockEntries);
-  const [selectedDate, setSelectedDate] = useState(Object.keys(entries)[0]);
+  const [entries, setEntries] = useState({});
+  const [selectedDate, setSelectedDate] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState("");
   const [showMenu, setShowMenu] = useState(false);
-  const dates = Object.keys(entries).sort().reverse();
+  const [isLoading, setIsLoading] = useState(true);
 
-  const getMarkedDates = () => {
-    const markedDates = {};
-    Object.keys(entries).forEach((date) => {
-      if (date === selectedDate) {
-        markedDates[date] = {
-          selected: true,
-          selectedColor: COLORS.primary,
-          marked: true,
-          dotColor: "white",
-        };
-      } else {
-        markedDates[date] = { marked: true, dotColor: COLORS.primary };
+  useEffect(() => {
+    const setupDatabase = async () => {
+      try {
+        setIsLoading(true);
+        await initDatabase();
+        await loadEntries();
+      } catch (error) {
+        console.error("Database initialization failed:", error);
+        Alert.alert(
+          "Error",
+          "Failed to initialize the database. Please restart the app."
+        );
+      } finally {
+        setIsLoading(false);
       }
-    });
-    return markedDates;
-  };
+    };
+    setupDatabase();
+  }, []);
 
-  const goToPreviousEntry = () => {
-    const currentIndex = dates.indexOf(selectedDate);
-    if (currentIndex < dates.length - 1) {
-      setSelectedDate(dates[currentIndex + 1]);
-      setIsEditing(false);
+  const loadEntries = async () => {
+    try {
+      const loadedEntries = await getEntries();
+      const entriesObject = loadedEntries.reduce((acc, entry) => {
+        acc[entry.date] = { id: entry.id, text: entry.text };
+        return acc;
+      }, {});
+      setEntries(entriesObject);
+      if (loadedEntries.length > 0) {
+        setSelectedDate(loadedEntries[0].date);
+      }
+    } catch (error) {
+      console.error("Failed to load entries:", error);
+      Alert.alert("Error", "Failed to load diary entries.");
     }
   };
 
-  const goToNextEntry = () => {
-    const currentIndex = dates.indexOf(selectedDate);
-    if (currentIndex > 0) {
-      setSelectedDate(dates[currentIndex - 1]);
+  const handleSave = async () => {
+    try {
+      if (entries[selectedDate]) {
+        await updateEntry(entries[selectedDate].id, editedText);
+      } else {
+        await addEntry(selectedDate, editedText);
+      }
+      await loadEntries();
       setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to save entry:", error);
+      Alert.alert("Error", "Failed to save diary entry.");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      if (entries[selectedDate]) {
+        await deleteEntry(entries[selectedDate].id);
+        await loadEntries();
+      }
+      setShowMenu(false);
+    } catch (error) {
+      console.error("Failed to delete entry:", error);
+      Alert.alert("Error", "Failed to delete diary entry.");
     }
   };
 
   const handleEdit = () => {
     setIsEditing(true);
-    setEditedText(entries[selectedDate].text);
+    setEditedText(entries[selectedDate]?.text || "");
     setShowMenu(false);
   };
 
-  const handleSave = () => {
-    setEntries((prevEntries) => ({
-      ...prevEntries,
-      [selectedDate]: { ...prevEntries[selectedDate], text: editedText },
-    }));
-    setIsEditing(false);
-  };
-
-  const handleDelete = () => {
-    setEntries((prevEntries) => {
-      const newEntries = { ...prevEntries };
-      delete newEntries[selectedDate];
-      setSelectedDate(Object.keys(newEntries)[0]);
-      return newEntries;
-    });
-    setShowMenu(false);
-  };
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -129,7 +135,14 @@ export default function HistoryScreen() {
               setIsEditing(false);
             }
           }}
-          markedDates={getMarkedDates()}
+          markedDates={Object.keys(entries).reduce((acc, date) => {
+            acc[date] = { marked: true, dotColor: COLORS.primary };
+            if (date === selectedDate) {
+              acc[date].selected = true;
+              acc[date].selectedColor = COLORS.primary;
+            }
+            return acc;
+          }, {})}
           theme={{
             backgroundColor: COLORS.secondary,
             calendarBackground: COLORS.secondary,
@@ -170,29 +183,6 @@ export default function HistoryScreen() {
             <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         )}
-      </View>
-
-      <View style={styles.navigationContainer}>
-        <TouchableOpacity
-          style={[
-            styles.navButton,
-            !dates[dates.indexOf(selectedDate) + 1] && styles.disabledButton,
-          ]}
-          onPress={goToPreviousEntry}
-          disabled={!dates[dates.indexOf(selectedDate) + 1]}
-        >
-          <Text style={styles.navButtonText}>Previous</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.navButton,
-            !dates[dates.indexOf(selectedDate) - 1] && styles.disabledButton,
-          ]}
-          onPress={goToNextEntry}
-          disabled={!dates[dates.indexOf(selectedDate) - 1]}
-        >
-          <Text style={styles.navButtonText}>Next</Text>
-        </TouchableOpacity>
       </View>
 
       <Modal
@@ -281,25 +271,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: "#fff",
     fontSize: 16,
-  },
-  navigationContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
-  navButton: {
-    backgroundColor: COLORS.accent,
-    padding: 10,
-    borderRadius: 5,
-    width: "45%",
-    alignItems: "center",
-  },
-  navButtonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-  disabledButton: {
-    backgroundColor: COLORS.accent + "80", // Add transparency to show it's disabled
   },
   modalOverlay: {
     flex: 1,
