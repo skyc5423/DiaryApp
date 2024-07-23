@@ -1,4 +1,3 @@
-// database.js
 import * as SQLite from "expo-sqlite";
 
 let db = null;
@@ -59,10 +58,10 @@ export const getEntries = async () => {
     const result = await db.execAsync(
       "SELECT * FROM entries ORDER BY date DESC;"
     );
-    return result[0].rows;
+    return result && result[0] && result[0].rows ? result[0].rows : [];
   } catch (error) {
     console.error("Error getting entries:", error);
-    throw error;
+    return []; // Return an empty array in case of error
   }
 };
 
@@ -72,9 +71,9 @@ export const getEntryByDate = async (date) => {
     const result = await db.execAsync("SELECT * FROM entries WHERE date = ?;", [
       date,
     ]);
-    return result[0].rows[0];
+    return result[0].rows[0] || null; // Return null if no entry is found
   } catch (error) {
     console.error("Error getting entry by date:", error);
-    throw error;
+    return null; // Return null in case of error
   }
 };

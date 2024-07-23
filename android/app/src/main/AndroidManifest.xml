@@ -28,17 +28,12 @@
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>
-     <activity
-    android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
-      android:exported="true">
+    <activity android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity" android:exported="true">
       <intent-filter>
-        <action android:name="android.intent.action.VIEW" />
-        <category android:name="android.intent.category.DEFAULT" />
-        <category android:name="android.intent.category.BROWSABLE" />
-
-        <!-- Redirect URI: "kakao{NATIVE_APP_KEY}://oauth“ -->
-        <data android:host="oauth"
-            android:scheme="kakao{카카오 네이티브 앱 key를 입력해주세요}" />
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:host="oauth" android:scheme="kakao{카카오 네이티브 앱 key를 입력해주세요}"/>
       </intent-filter>
     </activity>
   </application>
