@@ -1,5 +1,4 @@
-// screens/HistoryScreen.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -12,6 +11,7 @@ import {
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   initDatabase,
   getEntries,
@@ -37,41 +37,47 @@ export default function HistoryScreen() {
   const [showMenu, setShowMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const setupDatabase = async () => {
-      try {
-        setIsLoading(true);
-        await initDatabase();
-        await loadEntries();
-      } catch (error) {
-        console.error("Database initialization failed:", error);
-        Alert.alert(
-          "Error",
-          "Failed to initialize the database. Please restart the app."
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    setupDatabase();
-  }, []);
-
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     try {
+      setIsLoading(true);
       const loadedEntries = await getEntries();
       const entriesObject = loadedEntries.reduce((acc, entry) => {
-        acc[entry.date] = { id: entry.id, text: entry.text };
+        acc[entry.date] = { id: entry.id, text: entry.rawInput };
         return acc;
       }, {});
       setEntries(entriesObject);
-      if (loadedEntries.length > 0) {
+      if (loadedEntries.length > 0 && !selectedDate) {
         setSelectedDate(loadedEntries[0].date);
       }
     } catch (error) {
       console.error("Failed to load entries:", error);
       Alert.alert("Error", "Failed to load diary entries.");
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [selectedDate]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const setupDatabase = async () => {
+        try {
+          await initDatabase();
+          await loadEntries();
+        } catch (error) {
+          console.error("Database initialization failed:", error);
+          Alert.alert(
+            "Error",
+            "Failed to initialize the database. Please restart the app."
+          );
+        }
+      };
+      setupDatabase();
+
+      return () => {
+        // Clean up if needed
+      };
+    }, [loadEntries])
+  );
 
   const handleSave = async () => {
     try {

@@ -56,7 +56,7 @@ export const addEntry = async (date, text) => {
 export const updateEntry = async (id, text) => {
   if (!db) await initDatabase();
   try {
-    await db.execAsync("UPDATE entries SET text = ? WHERE id = ?;", [text, id]);
+    await db.execAsync("UPDATE diary SET text = ? WHERE id = ?;", [text, id]);
   } catch (error) {
     console.error("Error updating entry:", error);
     throw error;
@@ -66,7 +66,7 @@ export const updateEntry = async (id, text) => {
 export const deleteEntry = async (id) => {
   if (!db) await initDatabase();
   try {
-    await db.execAsync("DELETE FROM entries WHERE id = ?;", [id]);
+    await db.execAsync("DELETE FROM diary WHERE id = ?;", [id]);
   } catch (error) {
     console.error("Error deleting entry:", error);
     throw error;
@@ -76,10 +76,8 @@ export const deleteEntry = async (id) => {
 export const getEntries = async () => {
   if (!db) await initDatabase();
   try {
-    const result = await db.execAsync(
-      "SELECT * FROM entries ORDER BY date DESC;"
-    );
-    return result && result[0] && result[0].rows ? result[0].rows : [];
+    const result = await db.getAllAsync("SELECT * FROM diary;");
+    return result;
   } catch (error) {
     console.error("Error getting entries:", error);
     return []; // Return an empty array in case of error
@@ -89,7 +87,7 @@ export const getEntries = async () => {
 export const getEntryByDate = async (date) => {
   if (!db) await initDatabase();
   try {
-    const result = await db.execAsync("SELECT * FROM entries WHERE date = ?;", [
+    const result = await db.execAsync("SELECT * FROM diary WHERE date = ?;", [
       date,
     ]);
     return result[0].rows[0] || null; // Return null if no entry is found
