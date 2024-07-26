@@ -9,7 +9,10 @@ import {
   Image,
   ActivityIndicator,
   SafeAreaView,
+  Alert,
 } from "react-native";
+
+import { addEntry } from "../database";
 
 const COLORS = {
   primary: "#7BB5B5", // Soft teal
@@ -17,6 +20,8 @@ const COLORS = {
   text: "#2C3E50", // Dark blue-gray
   accent: "#93A9D1", // Soft periwinkle
 };
+
+const API_URL = "http://54.180.131.3:8000/ping";
 
 export default function WriteDiaryScreen() {
   const [keyword, setKeyword] = useState("");
@@ -26,19 +31,53 @@ export default function WriteDiaryScreen() {
 
   const handleSubmit = async () => {
     if (keyword.trim() === "") {
-      alert("Please enter a keyword for your diary.");
+      Alert.alert("Error", "Please write something in your diary.");
       return;
     }
 
     setIsLoading(true);
 
-    // Simulating API call with a delay
-    setTimeout(() => {
-      // TODO: Replace with actual API call
-      setDiaryEntry(`Today was a great day! I felt ${keyword}.`);
-      setCelebrationImage("https://via.placeholder.com/150");
+    try {
+      // Get current date in YYYY-MM-DD format
+      const currentDate = new Date().toISOString().split("T")[0];
+
+      // Prepare the request body
+      const requestBody = {
+        userId: 1, // Replace with actual user ID
+        date: currentDate,
+        rawInput: keyword,
+      };
+
+      // Make the API call
+      const response = await fetch(API_URL, {
+        method: "GET",
+        // headers: {
+        // "Content-Type": "application/json",
+        // },
+        // body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const responseData = await response.json();
+
+      const responseText = JSON.stringify(responseData);
+
+      await addEntry(currentDate, responseText);
+
+      Alert.alert("Success", "Your diary entry has been saved.");
+      setDiaryEntry(responseText);
+    } catch (error) {
+      console.error("Error saving diary entry:", error);
+      Alert.alert(
+        "Error",
+        "Failed to save your diary entry. Please try again."
+      );
+    } finally {
       setIsLoading(false);
-    }, 2000); // 2-second delay to simulate API call
+    }
   };
 
   const resetEntry = () => {

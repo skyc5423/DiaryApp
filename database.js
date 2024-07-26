@@ -1,17 +1,36 @@
+import * as FileSystem from "expo-file-system";
 import * as SQLite from "expo-sqlite";
+
+const DB_NAME = "diary_test.db";
 
 let db = null;
 
 export const initDatabase = async () => {
-  if (db !== null) {
-    return;
-  }
-
   try {
-    db = await SQLite.openDatabaseAsync("diary.db");
-    await db.execAsync(
-      "CREATE TABLE IF NOT EXISTS entries (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, text TEXT);"
-    );
+    db = await SQLite.openDatabaseAsync(DB_NAME);
+
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS diary (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+          userId INT NOT NULL,
+          date DATE NOT NULL,
+          rawInput TEXT NOT NULL,
+          content TEXT,
+          imgUrl VARCHAR(255),
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          lastModified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+`);
+
+    // // `getFirstAsync()` is useful when you want to get a single row from the database.
+    // const firstRow = await db.getFirstAsync("SELECT * FROM test");
+    // console.log(firstRow.id, firstRow.value, firstRow.intValue);
+
+    // // `getAllAsync()` is useful when you want to get all results as an array of objects.
+    // const allRows = await db.getAllAsync("SELECT * FROM test");
+    // for (const row of allRows) {
+    //   console.log(row.id, row.value, row.intValue);
+    // }
   } catch (error) {
     console.error("Error initializing database:", error);
     throw error;
@@ -21,11 +40,13 @@ export const initDatabase = async () => {
 export const addEntry = async (date, text) => {
   if (!db) await initDatabase();
   try {
-    const result = await db.execAsync(
-      "INSERT INTO entries (date, text) VALUES (?, ?);",
-      [date, text]
+    const result = await db.runAsync(
+      "INSERT INTO diary (userId, date, rawInput) VALUES (?, ?, ?)",
+      1,
+      date,
+      text
     );
-    return result[0].insertId;
+    return result.lastInsertRowId;
   } catch (error) {
     console.error("Error adding entry:", error);
     throw error;
