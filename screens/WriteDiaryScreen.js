@@ -21,7 +21,7 @@ const COLORS = {
   accent: "#93A9D1", // Soft periwinkle
 };
 
-const API_URL = "http://54.180.131.3:8000/ping";
+const API_URL = "http://54.180.131.3:8000/diaries";
 
 export default function WriteDiaryScreen() {
   const [keyword, setKeyword] = useState("");
@@ -50,11 +50,11 @@ export default function WriteDiaryScreen() {
 
       // Make the API call
       const response = await fetch(API_URL, {
-        method: "GET",
-        // headers: {
-        // "Content-Type": "application/json",
-        // },
-        // body: JSON.stringify(requestBody),
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -63,11 +63,11 @@ export default function WriteDiaryScreen() {
 
       const responseData = await response.json();
 
-      const responseText = JSON.stringify(responseData);
+      const responseText = responseData.content;
 
       await addEntry(currentDate, responseText);
 
-      Alert.alert("Success", "Your diary entry has been saved.");
+      // Alert.alert("Success", "Your diary entry has been saved.");
       setDiaryEntry(responseText);
     } catch (error) {
       console.error("Error saving diary entry:", error);
