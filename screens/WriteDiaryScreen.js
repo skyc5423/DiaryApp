@@ -1,4 +1,3 @@
-// screens/WriteDiaryScreen.js
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -11,14 +10,14 @@ import {
   SafeAreaView,
   Alert,
 } from "react-native";
-
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { addEntry } from "../database";
 
 const COLORS = {
-  primary: "#7BB5B5", // Soft teal
-  secondary: "#F0F7F4", // Light mint cream
-  text: "#2C3E50", // Dark blue-gray
-  accent: "#93A9D1", // Soft periwinkle
+  primary: "#7BB5B5",
+  secondary: "#F0F7F4",
+  text: "#2C3E50",
+  accent: "#93A9D1",
 };
 
 const API_URL = "http://54.180.131.3:8000/diaries";
@@ -28,6 +27,8 @@ export default function WriteDiaryScreen() {
   const [diaryEntry, setDiaryEntry] = useState("");
   const [celebrationImage, setCelebrationImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleSubmit = async () => {
     if (keyword.trim() === "") {
@@ -38,17 +39,15 @@ export default function WriteDiaryScreen() {
     setIsLoading(true);
 
     try {
-      // Get current date in YYYY-MM-DD format
-      const currentDate = new Date().toISOString().split("T")[0];
+      // Format the selected date as YYYY-MM-DD
+      const formattedDate = selectedDate.toISOString().split("T")[0];
 
-      // Prepare the request body
       const requestBody = {
         userId: 1, // Replace with actual user ID
-        date: currentDate,
+        date: formattedDate,
         rawInput: keyword,
       };
 
-      // Make the API call
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
@@ -62,12 +61,10 @@ export default function WriteDiaryScreen() {
       }
 
       const responseData = await response.json();
-
       const responseText = responseData.content;
 
-      await addEntry(currentDate, responseText);
+      await addEntry(formattedDate, responseText);
 
-      // Alert.alert("Success", "Your diary entry has been saved.");
       setDiaryEntry(responseText);
     } catch (error) {
       console.error("Error saving diary entry:", error);
@@ -84,6 +81,14 @@ export default function WriteDiaryScreen() {
     setKeyword("");
     setDiaryEntry("");
     setCelebrationImage(null);
+    setSelectedDate(new Date());
+  };
+
+  const onDateChange = (event, selected) => {
+    setShowDatePicker(false);
+    if (selected) {
+      setSelectedDate(selected);
+    }
   };
 
   return (
@@ -106,7 +111,23 @@ export default function WriteDiaryScreen() {
           </View>
         ) : (
           <View style={styles.inputContainer}>
-            <Text style={styles.prompt}>What's on your mind today?</Text>
+            <Text style={styles.prompt}>What's on your mind?</Text>
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={styles.dateButtonText}>
+                {selectedDate.toDateString()}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="default"
+                onChange={onDateChange}
+              />
+            )}
             <TextInput
               style={styles.input}
               onChangeText={setKeyword}
@@ -125,6 +146,18 @@ export default function WriteDiaryScreen() {
 }
 
 const styles = StyleSheet.create({
+  dateButton: {
+    backgroundColor: COLORS.accent,
+    padding: 15,
+    borderRadius: 25,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  dateButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.secondary,
