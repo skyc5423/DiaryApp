@@ -11,8 +11,8 @@ export const initDatabase = async () => {
 
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS diary (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-          userId INT NOT NULL,
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          userId INTEGER NOT NULL,
           date DATE NOT NULL,
           rawInput TEXT NOT NULL,
           content TEXT,
@@ -21,16 +21,6 @@ export const initDatabase = async () => {
           lastModified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 `);
-
-    // // `getFirstAsync()` is useful when you want to get a single row from the database.
-    // const firstRow = await db.getFirstAsync("SELECT * FROM test");
-    // console.log(firstRow.id, firstRow.value, firstRow.intValue);
-
-    // // `getAllAsync()` is useful when you want to get all results as an array of objects.
-    // const allRows = await db.getAllAsync("SELECT * FROM test");
-    // for (const row of allRows) {
-    //   console.log(row.id, row.value, row.intValue);
-    // }
   } catch (error) {
     console.error("Error initializing database:", error);
     throw error;
@@ -66,7 +56,10 @@ export const updateEntry = async (id, text) => {
 export const deleteEntry = async (id) => {
   if (!db) await initDatabase();
   try {
-    await db.execAsync("DELETE FROM diary WHERE id = ?;", [id]);
+    const result = await db.runAsync("DELETE FROM diary WHERE id = $id", {
+      $id: id,
+    });
+    return result;
   } catch (error) {
     console.error("Error deleting entry:", error);
     throw error;
