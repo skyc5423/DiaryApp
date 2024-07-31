@@ -94,16 +94,19 @@ const QAScreen = () => {
         }),
       });
 
+      const responseData = await response.json();
+      const responseText = responseData.answer;
+
       const newQA = {
         id: Date.now(), // Use a proper ID in production
         query: query.trim(),
-        answer: response.data.answer,
+        answer: responseText,
       };
 
       setQAList((prevList) => [newQA, ...prevList]);
       setExpandedId(newQA.id);
       setQuery("");
-      Alert.alert("Response", response.data.answer);
+      Alert.alert("Response", responseText);
 
       // TODO: Save the new Q&A to local storage or database
     } catch (error) {
