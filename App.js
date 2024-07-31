@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, Text, TouchableOpacity } from "react-native";
 import WriteDiaryScreen from "./screens/WriteDiaryScreen";
 import HistoryScreen from "./screens/HistoryScreen";
+import AIQueryScreen from "./screens/AIQueryScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 
 const Tab = createBottomTabNavigator();
@@ -81,6 +82,7 @@ export default function App() {
       >
         <Tab.Screen name="Write" component={WriteDiaryScreen} />
         <Tab.Screen name="History" component={HistoryScreen} />
+        <Tab.Screen name="AI" component={AIQueryScreen} />
         <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
     </NavigationContainer>

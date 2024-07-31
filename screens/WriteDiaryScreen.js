@@ -20,7 +20,7 @@ const COLORS = {
   accent: "#93A9D1",
 };
 
-const API_URL = "http://54.180.131.3:8000/diaries";
+const API_URL_WRITE_DIARY = "http://54.180.131.3:8000/diaries";
 
 export default function WriteDiaryScreen() {
   const [keyword, setKeyword] = useState("");
@@ -48,7 +48,7 @@ export default function WriteDiaryScreen() {
         rawInput: keyword,
       };
 
-      const response = await fetch(API_URL, {
+      const response = await fetch(API_URL_WRITE_DIARY, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
