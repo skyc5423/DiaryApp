@@ -42,7 +42,7 @@ export default function HistoryScreen() {
       setIsLoading(true);
       const loadedEntries = await getEntries();
       const entriesObject = loadedEntries.reduce((acc, entry) => {
-        acc[entry.date] = { id: entry.id, text: entry.rawInput };
+        acc[entry.date] = { id: entry.id, text: entry.content };
         return acc;
       }, {});
       setEntries(entriesObject);

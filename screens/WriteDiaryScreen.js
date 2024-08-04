@@ -63,7 +63,7 @@ export default function WriteDiaryScreen() {
       const responseData = await response.json();
       const responseText = responseData.content;
 
-      await addEntry(formattedDate, responseText);
+      await addEntry(formattedDate, keyword, responseText);
 
       setDiaryEntry(responseText);
     } catch (error) {
